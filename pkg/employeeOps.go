@@ -2,9 +2,10 @@ package pkg
 
 import (
 	"attandance/models"
-
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
 	"os"
 	"sync"
 )
@@ -68,3 +69,55 @@ func FindEmployee(id string) (models.Employee, error) {
 
 	return models.Employee{}, fmt.Errorf("employee with id %s not found", id)
 }
+
+// Delete employee
+func DeleteOps(res http.ResponseWriter, empID string) {
+	fileLock.Lock()
+	defer fileLock.Unlock()
+	employeesData, err := os.ReadFile(EmployeeFile)
+	if err != nil {
+		log.Println("ERROR", "Error reading file", err.Error())
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write(models.NewAPIError(http.StatusInternalServerError, "Error reading file").Jsonify())
+		return
+	}
+	var employees = make([]models.Employee, 0)
+
+	if err := json.Unmarshal(employeesData, &employees); err != nil {
+		log.Println("ERROR", "Error parsing employee data", err.Error())
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write(models.NewAPIError(http.StatusInternalServerError, err.Error()).Jsonify())
+		return
+	}
+	updatedEmployees := make([]models.Employee, 0)
+	found := false
+	for _, emp := range employees {
+		if emp.ID != empID {
+			updatedEmployees = append(updatedEmployees, emp)
+		} else {
+			found = true
+		}
+	}
+	if !found {
+		log.Println("ERROR", "Employee not found", err.Error())
+		res.WriteHeader(http.StatusNotFound)
+		res.Write(models.NewAPIError(http.StatusNotFound, err.Error()).Jsonify())
+		return
+	}
+	updatedData, err := json.Marshal(updatedEmployees)
+	if err != nil {
+		log.Println("ERROR", "Error writing updated data", err.Error())
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write(models.NewAPIError(http.StatusInternalServerError, err.Error()).Jsonify())
+		return
+	}
+	if err := os.WriteFile(EmployeeFile, updatedData, 0644); err != nil {
+		log.Println("ERROR", "Error saving updated file", err.Error())
+		res.WriteHeader(http.StatusInternalServerError)
+		res.Write(models.NewAPIError(http.StatusInternalServerError, err.Error()).Jsonify())
+		return
+	}
+	res.WriteHeader(http.StatusOK)
+}
+
+func UpdateOps()
