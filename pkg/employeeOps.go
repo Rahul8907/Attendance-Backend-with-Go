@@ -120,4 +120,4 @@ func DeleteOps(res http.ResponseWriter, empID string) {
 	res.WriteHeader(http.StatusOK)
 }
 
-func UpdateOps()
+//func UpdateOps()
