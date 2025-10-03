@@ -84,7 +84,7 @@ func GetAllEmployeeHandler(w http.ResponseWriter, r *http.Request) {
 }
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
 	empID := r.PathValue("id")
-	err, code := pkg.UpdateOps(empID, "login")
+	code, err := pkg.UpdateOps(empID, "login")
 	if err != nil {
 		w.WriteHeader(code)
 		w.Write(models.NewAPIError(code, err.Error()).Jsonify())
@@ -97,7 +97,7 @@ func LogOutHandler(w http.ResponseWriter, r *http.Request) {
 	empID := r.PathValue("id")
 
 	// Read employee data from file
-	err, code := pkg.UpdateOps(empID, "logout")
+	code, err := pkg.UpdateOps(empID, "logout")
 	if err != nil {
 		w.WriteHeader(code)
 		w.Write(models.NewAPIError(code, err.Error()).Jsonify())

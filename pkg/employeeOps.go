@@ -84,20 +84,21 @@ func DeleteEmployee(id string) (int, error) {
 	*/
 	employeesData, err := os.ReadFile(EmployeeFile)
 	if err != nil {
-		return http.StatusInternalServerError, errors.New("Error reading file")
+		return http.StatusInternalServerError, errors.New("error reading file")
 	}
 	var employees = make([]models.Employee, 0)
 	if err := json.Unmarshal(employeesData, &employees); err != nil {
-		return http.StatusInternalServerError, errors.New("Error parsing employee data")
+		return http.StatusInternalServerError, errors.New("error parsing employee data")
 	}
 	updatedEmployees := make([]models.Employee, 0)
 	found := false
 	for _, emp := range employees {
 		if emp.ID != id {
 			updatedEmployees = append(updatedEmployees, emp)
-		} else {
-			found = true
+			continue
 		}
+		found = true
+
 	}
 	if !found {
 		return http.StatusNotFound, errors.New("employee not found")
@@ -114,78 +115,48 @@ func DeleteEmployee(id string) (int, error) {
 }
 
 // Update employee feilds
-func UpdateOps(empID string, incomingType string) (error, int) {
+func UpdateOps(empID string, incomingType string) (int, error) {
 	fileLock.Lock()
 	defer fileLock.Unlock()
 	if incomingType != "login" && incomingType != "logout" {
-		return errors.New("icoming type is not correct"), http.StatusInternalServerError
+		return http.StatusInternalServerError, errors.New("icoming type is not correct")
 	}
-	if incomingType == "login" {
-		employeeData, err := os.ReadFile(EmployeeFile)
-		if err != nil {
-			return errors.New("error reading file"), http.StatusInternalServerError
-		}
-		var employees = make([]models.Employee, 0)
-		err = json.Unmarshal(employeeData, &employees)
-		if err != nil {
-			return errors.New("Error unmarshalling data"), http.StatusInternalServerError
-		}
-		found := false
-		// Update login time
-		for i := range employees {
-			if employees[i].ID == empID {
+	employeeData, err := os.ReadFile(EmployeeFile)
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("error reading file")
+	}
+	var employees = make([]models.Employee, 0)
+	err = json.Unmarshal(employeeData, &employees)
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("error unmarshalling data")
+	}
+	found := false
+	// Update login time
+	for i := range employees {
+		if employees[i].ID == empID {
+			if incomingType == "login" {
 				employees[i].LogInTime = time.Now()
 				found = true
 				break
-			}
-		}
-		if !found {
-			return errors.New("Employee not found"), http.StatusNotFound
-		}
-		updatedData, err := json.Marshal(employees)
-		if err != nil {
-			return errors.New("Error marshalling updated data "), http.StatusInternalServerError
-		}
-
-		// Write back to file
-		err = os.WriteFile(EmployeeFile, updatedData, 0666)
-		if err != nil {
-			return errors.New("Error writing to file"), http.StatusInternalServerError
-		}
-	} else {
-		employeeData, err := os.ReadFile(EmployeeFile)
-		if err != nil {
-			return errors.New("error reading file"), http.StatusInternalServerError
-		}
-		var employees = make([]models.Employee, 0)
-		err = json.Unmarshal(employeeData, &employees)
-		if err != nil {
-			return errors.New("Error unmarshalling data"), http.StatusInternalServerError
-		}
-
-		found := false
-
-		// Update logout time
-		for i := range employees {
-			if employees[i].ID == empID {
+			} else {
 				employees[i].LogOutTime = time.Now()
 				found = true
 				break
 			}
 		}
-		if !found {
-			return errors.New("Employee not found"), http.StatusNotFound
-		}
-		updatedData, err := json.Marshal(employees)
-		if err != nil {
-			return errors.New("Error marshalling updated data "), http.StatusInternalServerError
-		}
-
-		// Write back to file
-		err = os.WriteFile(EmployeeFile, updatedData, 0666)
-		if err != nil {
-			return errors.New("Error writing to file"), http.StatusInternalServerError
-		}
 	}
-	return nil, http.StatusOK
+	if !found {
+		return http.StatusNotFound, errors.New("employee not found")
+	}
+	updatedData, err := json.Marshal(employees)
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("error marshalling updated data ")
+	}
+
+	// Write back to file
+	err = os.WriteFile(EmployeeFile, updatedData, 0666)
+	if err != nil {
+		return http.StatusInternalServerError, errors.New("error writing to file")
+	}
+	return http.StatusOK, nil
 }
