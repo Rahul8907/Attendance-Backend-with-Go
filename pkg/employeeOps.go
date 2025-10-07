@@ -4,6 +4,7 @@ import (
 	"attandance/models"
 	"errors"
 	"net/http"
+	"slices"
 	"time"
 
 	"encoding/json"
@@ -87,23 +88,27 @@ func DeleteEmployee(id string) (int, error) {
 		return http.StatusInternalServerError, errors.New("error reading file")
 	}
 	var employees = make([]models.Employee, 0)
+	// found := false
 	if err := json.Unmarshal(employeesData, &employees); err != nil {
 		return http.StatusInternalServerError, errors.New("error parsing employee data")
 	}
-	updatedEmployees := make([]models.Employee, 0)
-	found := false
-	for _, emp := range employees {
-		if emp.ID != id {
-			updatedEmployees = append(updatedEmployees, emp)
-			continue
-		}
-		found = true
+	employees = slices.DeleteFunc(employees, func(e models.Employee) bool {
 
-	}
-	if !found {
-		return http.StatusNotFound, errors.New("employee not found")
-	}
-	updatedData, err := json.Marshal(updatedEmployees)
+		return e.ID == id
+	})
+	// updatedEmployees := make([]models.Employee, 0)
+
+	// for _, emp := range employees {
+	// 	if emp.ID != id {
+	// 		updatedEmployees = append(updatedEmployees, emp)
+	// 		continue
+	// 	}
+
+	// }
+	// if !found {
+	// 	return http.StatusNotFound, errors.New("employee not found")
+	// }
+	updatedData, err := json.Marshal(employees)
 	if err != nil {
 		return http.StatusInternalServerError, errors.New("error writing updated data")
 	}
@@ -131,7 +136,7 @@ func UpdateOps(empID string, incomingType string) (int, error) {
 		return http.StatusInternalServerError, errors.New("error unmarshalling data")
 	}
 	found := false
-	// Update login time
+	// Update login and logout time
 	for i := range employees {
 		if employees[i].ID == empID {
 			if incomingType == "login" {
