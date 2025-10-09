@@ -8,12 +8,9 @@ services:
     environment:
       POSTGRES_USER: example
       POSTGRES_DB: exampledb
-  go-lang:
-     build: .
-     ports: "8080"
   backend:
     build: ./Attendance-Backend-with-Go
     ports:
-      - "3000:3000"
+      - "8080:8080"
     depends_on:
       - db
