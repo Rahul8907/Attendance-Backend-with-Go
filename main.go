@@ -2,12 +2,14 @@ package main
 
 import (
 	"attandance/controller"
+	"attandance/pkg"
 	"fmt"
 	"log"
 	"net/http"
 )
 
 func main() {
+	pkg.DbConnection()
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /employee", controller.CreateEmployeeHandler)
 	mux.HandleFunc("GET /employee/{id}", controller.GetEmployeeHandler)
