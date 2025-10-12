@@ -33,6 +33,14 @@ func CreateEmployeeHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write(models.NewAPIError(http.StatusBadRequest, err.Error()).Jsonify())
 		return
 	}
+	//save in db
+	_, err = pkg.Engine.Insert(emp)
+	if err != nil {
+
+		http.Error(w, "Failed to insert employee", http.StatusInternalServerError)
+		return
+
+	}
 	// TODO : Set Login time and logout time zero
 
 	// Add a valid UUID to employee
